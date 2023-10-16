@@ -99,4 +99,13 @@ export default class Model {
         this.addHostReferenceToAssetFileNames(instanceCopy);
         return instanceCopy;
     }
+    
+    isMember(propertyName){
+        let exist = false;
+        this.fields.forEach(field => {
+            if (field.name == propertyName)
+                exist = true;
+        })
+        return exist;
+    }
 }

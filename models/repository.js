@@ -3,6 +3,7 @@ import { v1 as uuidv1 } from "uuid";
 import * as utilities from "../utilities.js";
 import { log } from "../log.js";
 import RepositoryCachesManager from "./repositoryCachesManager.js";
+import CollectionFilter from "../collectionFilter.js";
 
 globalThis.jsonFilesPath = "jsonFiles";
 globalThis.repositoryEtags = {};
@@ -129,8 +130,10 @@ export default class Repository {
         }
         return false;
     }
-    getAll() {
-        let objectsList = this.objects();
+    getAll(params = null) {
+         // Todo Labo 4
+        let collectionFilter = new CollectionFilter(this.objects(), params, this.model);
+        let objectsList = collectionFilter.get();
         let bindedDatas = [];
         if (objectsList)
             for (let data of objectsList) {
