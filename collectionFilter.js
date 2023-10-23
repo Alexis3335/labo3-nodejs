@@ -36,7 +36,7 @@ export default class CollectionFilter {
 
     get() {
         let objectList = this.objects;
-        let possibleParams = ["sort", "field", "limit", "offset"];
+        let possibleParams = ["sort", "fields", "limit", "offset"];
 
         let lowercaseParams = Object.fromEntries(
             Object.entries(this.params).map(([k, v]) => {
@@ -85,7 +85,7 @@ export default class CollectionFilter {
 
 
 
-                if (sortType in objectList[0]) {
+                if (objectList.length > 0 && sortType in objectList[0]) {
                     if (!desc)
                         objectList = objectList.sort((a, b) => (a[sortType] > b[sortType]) ? 1 : -1);
                     else
@@ -94,38 +94,73 @@ export default class CollectionFilter {
 
             }
 
-            // Only show a specific field 
-
-            if ("field" in lowercaseParams) {
-                let field = lowercaseParams.field;
-                let field_array = [];
-
-                if(objectList.length > 1 && field in objectList[0]){
-
-                    for(let obj of objectList){
-                        if(!field_array.includes(obj[field]))
-                            field_array.push(obj[field]);
-                    }
-                }
-
-                let i = 1;
-
-                objectList = field_array.map((elem,i) => ({[i] : elem}))
-            }
 
             // Limit & offset
 
-            if("limit" in lowercaseParams && "offset" in lowercaseParams){
+            if ("limit" in lowercaseParams && "offset" in lowercaseParams) {
                 let limit = parseInt(lowercaseParams.limit);
                 let offset = parseInt(lowercaseParams.offset);
 
-                if(!isNaN(limit) && !isNaN(offset))
-                    objectList = objectList.slice(limit * offset,limit * offset + limit);
+                if (!isNaN(limit) && !isNaN(offset))
+                    objectList = objectList.slice(limit * offset, limit * offset + limit);
             }
+
+
+            // Only show one or more specific field(s)
+            if ("fields" in lowercaseParams) {
+                let fields = lowercaseParams.fields.split(",");
+
+                // Clean up fields array, remove invalid keys
+                for (let field of fields) {
+
+                    if (!objectKeys.includes(field)) {
+                        const index = fields.indexOf(field);
+                        fields.splice(index, 1);
+                    }
+
+                }
+
+
+                if (objectList.length > 0 && fields.length > 0) {
+
+                    const uniqueObjects = new Set();
+
+                    for (let obj of objectList) {
+                        let temp_obj = {};
+                        for (let field of fields) {
+                            temp_obj[field] = obj[field];
+                        }
+
+                        const temp_obj_str = JSON.stringify(temp_obj);
+                        uniqueObjects.add(temp_obj_str);
+
+
+                    }
+                    objectList = Array.from(uniqueObjects).map((objStr) => JSON.parse(objStr));
+                }
+
+
+
+
+
+
+            }
+
 
         }
 
         return objectList;
+    }
+
+    static equal(ox, oy) {
+        let equal = true;
+        Object.keys(ox).forEach(function (member) {
+            if (ox[member] != oy[member]) {
+                equal = false;
+                return false;
+            }
+        })
+        return equal;
     }
 
 
